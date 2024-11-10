@@ -1,41 +1,126 @@
+using System;
+using System.Collections;
 using UnityEngine;
-using UnityEngine.Pool;
 using UnityEngine.UI;
 
 public class Monster : MonoBehaviour
 {
+    public Animator anim;
+    private SpriteRenderer spriteRenderer;
+
+    public string monsterName;
+    public string grade;
+    public float speed;
     public int maxHealth;
     public int currentHealth;
-    public float speed;
-    public string monsterName;
-    public GameObject healthBar; // 몬스터 체력바 UI
+    public bool encount = false;
+    public bool isDead = false;
 
-    private bool isInAttackRange = false;
+    public Slider healthBarSlider;
 
-    private void Start()
+    private Transform player;
+    private Transform targetPosition;
+
+    public event Action<GameObject> OnDeath;
+
+    private void OnEnable()
     {
+        encount = false;
+        isDead = false;
+        anim.SetBool("Encount", false);
+
+        if (healthBarSlider == null)
+        {
+            healthBarSlider = FindObjectOfType<Slider>();
+            if (healthBarSlider == null)
+            {
+                Debug.LogWarning("HealthBarSlider not found in the scene.");
+            }
+        }
+        
+        if (targetPosition == null)
+        {
+            targetPosition = FindObjectOfType<SpawnPoint>().transform;
+            if (targetPosition == null)
+            {
+                Debug.LogWarning("targetPosition not found in the scene.");
+            }
+        }
+
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            if (spriteRenderer == null)
+            {
+                Debug.LogWarning("SpriteRenderer not found in the children of Monster.");
+            }
+        }
+
+        if (healthBarSlider != null)
+        {
+            healthBarSlider.maxValue = maxHealth;
+            healthBarSlider.value = currentHealth;
+        }
+
         currentHealth = maxHealth;
+        if (spriteRenderer != null) spriteRenderer.color = Color.white;
     }
 
-    private void Update()
+    public void Initialize(MonsterData data)
     {
-        if (isInAttackRange)
+        monsterName = data.name;
+        grade = data.grade;
+        speed = data.speed;
+        maxHealth = data.maxHealth;
+        currentHealth = maxHealth;
+        encount = false;
+
+        if (healthBarSlider == null)
         {
-            // Idle 상태로 대기
-            // 몬스터의 애니메이션을 Idle로 전환 (애니메이터 활용)
-        }
-        else
-        {
-            //transform.position = Vector3.MoveTowards(transform.position, Player.Instance.transform.position, speed * Time.deltaTime);
+            healthBarSlider = FindObjectOfType<Slider>();
+            if (healthBarSlider == null)
+            {
+                Debug.LogWarning("HealthBarSlider not found in Initialize.");
+            }
         }
 
-        // 체력 바 업데이트
-        //healthBar.fillAmount = (float)currentHealth / maxHealth;
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            if (spriteRenderer == null)
+            {
+                Debug.LogWarning("SpriteRenderer not found in Initialize.");
+            }
+        }
+
+        if (healthBarSlider != null)
+        {
+            healthBarSlider.maxValue = maxHealth;
+            healthBarSlider.value = currentHealth;
+        }
+
+        player = GameObject.FindWithTag("Player")?.transform;
+    }
+
+    void Update()
+    {
+        Debug.Log(encount);
+        if (player != null && !encount && !isDead)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, player.position, speed * Time.deltaTime);
+        }
+        if (encount)
+        {
+            anim.SetBool("Encount", true);
+        }
     }
 
     public void TakeDamage(int damage)
     {
         currentHealth -= damage;
+        healthBarSlider.value = currentHealth;
+
+        StartCoroutine(DamageEffect());
 
         if (currentHealth <= 0)
         {
@@ -43,25 +128,20 @@ public class Monster : MonoBehaviour
         }
     }
 
-    private void Die()
+    IEnumerator DamageEffect()
     {
-        // 몬스터가 죽을 때 처리 (체력바 제거, 오브젝트 풀로 반환 등)
-        //ObjectPool.Instance.ReturnMonster(gameObject);
+        spriteRenderer.color = Color.red;
+        yield return new WaitForSeconds(0.1f);
+        spriteRenderer.color = Color.white;
     }
 
-    private void OnTriggerEnter(Collider other)
+    void Die()
     {
-        if (other.CompareTag("PlayerAttackRange"))
-        {
-            isInAttackRange = true;
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("PlayerAttackRange"))
-        {
-            isInAttackRange = false;
-        }
+        transform.position = targetPosition.position;
+        isDead = true;
+        encount = false;
+        anim.SetBool("Encount", false);
+        spriteRenderer.color = Color.white;
+        OnDeath?.Invoke(gameObject);
     }
 }

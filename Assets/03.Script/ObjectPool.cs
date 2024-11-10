@@ -4,44 +4,46 @@ using System.Collections.Generic;
 public class ObjectPool : MonoBehaviour
 {
     public static ObjectPool Instance;
-    public GameObject projectilePrefab;  // 투사체 프리팹
-    public int poolSize = 10;            // 풀 크기
+    private Dictionary<GameObject, Queue<GameObject>> poolDictionary = new Dictionary<GameObject, Queue<GameObject>>();
 
-    private Queue<GameObject> projectilePool = new Queue<GameObject>();
-
-    void Awake()
+    private void Awake()
     {
         Instance = this;
-
-        // 오브젝트 풀 초기화
-        for (int i = 0; i < poolSize; i++)
-        {
-            GameObject obj = Instantiate(projectilePrefab);
-            obj.SetActive(false);
-            projectilePool.Enqueue(obj);
-        }
+        Debug.Log("ObjectPool initialized.");
     }
 
-    // 오브젝트 풀에서 투사체 가져오기
-    public GameObject GetProjectile()
+    public GameObject GetMonster(GameObject prefab)
     {
-        if (projectilePool.Count > 0)
+        if (!poolDictionary.ContainsKey(prefab))
         {
-            GameObject obj = projectilePool.Dequeue();
-            obj.SetActive(true);
-            return obj;
+            poolDictionary[prefab] = new Queue<GameObject>();
+            Debug.Log($"Creating new queue for {prefab.name} in ObjectPool.");
+        }
+
+        if (poolDictionary[prefab].Count > 0)
+        {
+            GameObject monster = poolDictionary[prefab].Dequeue();
+            monster.SetActive(true);
+            Debug.Log($"{prefab.name} dequeued from pool.");
+            return monster;
         }
         else
         {
-            GameObject obj = Instantiate(projectilePrefab);
-            return obj;
+            GameObject newMonster = Instantiate(prefab);
+            Debug.Log($"{prefab.name} instantiated.");
+            return newMonster;
         }
     }
 
-    // 오브젝트 풀로 투사체 반환
-    public void ReturnProjectile(GameObject projectile)
+    public void ReturnMonster(GameObject monster, GameObject prefab)
     {
-        projectile.SetActive(false);
-        projectilePool.Enqueue(projectile);
+        monster.SetActive(false);
+        Debug.Log($"{monster.name} returned to pool and deactivated.");
+
+        if (!poolDictionary.ContainsKey(prefab))
+        {
+            poolDictionary[prefab] = new Queue<GameObject>();
+        }
+        poolDictionary[prefab].Enqueue(monster);
     }
 }

@@ -1,41 +1,84 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Pool;
 
-public class PlayerAttack : MonoBehaviour
+public class Player : MonoBehaviour
 {
-    public GameObject projectilePrefab;      
-    public float attackSpeed = 1f;           
-    public int damage = 100;                 
-    public float attackRange = 5f;           
-    public Animator playerAnimator;          
+    public Animator anim;
+    public float attackRange = 5f;
+    public int damage = 100;
+    public float attackInterval = 1f;
+    public float finalAttackTime = 0f;
+
+    private Monster targetMonster;
 
     private void Start()
     {
-        InvokeRepeating("Attack", 1f, attackSpeed);
+        StartCoroutine(CheckForMonsterCoroutine());
     }
 
-    void Attack()
+    IEnumerator CheckForMonsterCoroutine()
     {
-        // 공격 범위 내 몬스터 감지
-        Collider[] hitEnemies = Physics.OverlapSphere(transform.position, attackRange);
-
-        foreach (Collider enemy in hitEnemies)
+        while (true)
         {
-            if (enemy.CompareTag("Monster"))
-            {
-                // 공격 애니메이션 전환
-                playerAnimator.SetTrigger("Attack");
-
-                // 투사체 발사
-                ShootProjectile(enemy.transform);
-            }
+            CheckForMonster();
+            yield return null;
         }
     }
 
-    void ShootProjectile(Transform target)
+    void CheckForMonster()
     {
-        GameObject projectile = ObjectPool.Instance.GetProjectile();
-        projectile.transform.position = transform.position;
-        projectile.GetComponent<Projectile>().Initialize(target, damage);
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(transform.position, attackRange);
+        if (hitColliders == null || hitColliders.Length == 0)
+        {
+            anim.SetBool("Encount", false);
+            targetMonster = null;
+            return;
+        }
+
+        List<Collider2D> aliveMonsters = new List<Collider2D>();
+
+        foreach (var hitCollider in hitColliders)
+        {
+            Monster monster = hitCollider.GetComponent<Monster>();
+            if (monster != null)
+            {
+                if (monster.isDead)
+                {
+                    continue;
+                }
+                else
+                {
+                    aliveMonsters.Add(hitCollider);
+                    targetMonster = monster;
+                    targetMonster.encount = true;
+                    anim.SetBool("Encount", true);
+                    return;
+                }
+            }
+        }
+
+        if (aliveMonsters.Count == 0)
+        {
+            anim.SetBool("Encount", false);
+            targetMonster = null;
+        }
+    }
+
+    public void OnAttackAnimation()
+    {
+        if (targetMonster != null && Time.time - finalAttackTime >= attackInterval)
+        {
+            AttackMonster();
+        }
+    }
+
+    void AttackMonster()
+    {
+        if (targetMonster != null)
+        {
+            targetMonster.TakeDamage(damage);
+            finalAttackTime = Time.time;
+        }
     }
 }
