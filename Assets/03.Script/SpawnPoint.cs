@@ -44,7 +44,6 @@ public class SpawnPoint : MonoBehaviour
 
     private void OnMonsterDeath(GameObject monster)
     {
-        monster.GetComponent<Monster>().encount = false;
         GameObject prefab = monsterPrefabs[(currentMonsterIndex + monsterPrefabs.Count - 1) % monsterPrefabs.Count];
         ObjectPool.Instance.ReturnMonster(monster, prefab);
 

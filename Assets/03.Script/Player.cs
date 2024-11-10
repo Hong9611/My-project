@@ -51,7 +51,6 @@ public class Player : MonoBehaviour
                 {
                     aliveMonsters.Add(hitCollider);
                     targetMonster = monster;
-                    targetMonster.encount = true;
                     anim.SetBool("Encount", true);
                     return;
                 }

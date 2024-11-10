@@ -19,6 +19,8 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
     public List<MonsterData> monsterDataList = new List<MonsterData>();
 
+    public Transform arrivePosition;
+
     void Awake()
     {
         Instance = this;

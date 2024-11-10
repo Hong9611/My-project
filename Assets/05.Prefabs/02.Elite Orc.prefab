@@ -72,7 +72,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_Sprite: {fileID: -7022427379733896490, guid: bbd90f5ea6df98649b30f842a4c45611, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 1
@@ -153,12 +153,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   anim: {fileID: 6421237377355832240}
+  popUp: {fileID: 8583283133505691050, guid: 836989d891b123f45a72019bef26e8fb, type: 3}
   monsterName: 
   grade: 
   speed: 0
   maxHealth: 0
   currentHealth: 0
-  encount: 0
+  isDead: 0
   healthBarSlider: {fileID: 0}
 --- !u!61 &5777993944416715871
 BoxCollider2D:

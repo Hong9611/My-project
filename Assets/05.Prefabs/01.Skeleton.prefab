@@ -69,12 +69,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   anim: {fileID: 3242544726398112574}
+  popUp: {fileID: 8583283133505691050, guid: 836989d891b123f45a72019bef26e8fb, type: 3}
   monsterName: 
   grade: 
   speed: 0
   maxHealth: 0
   currentHealth: 0
-  encount: 0
   isDead: 0
   healthBarSlider: {fileID: 0}
 --- !u!61 &-2430377513490413653

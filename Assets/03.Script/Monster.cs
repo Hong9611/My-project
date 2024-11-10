@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,13 +8,14 @@ public class Monster : MonoBehaviour
 {
     public Animator anim;
     private SpriteRenderer spriteRenderer;
+    public GameObject popUp;
+    GameObject popDown;
 
     public string monsterName;
     public string grade;
     public float speed;
     public int maxHealth;
     public int currentHealth;
-    public bool encount = false;
     public bool isDead = false;
 
     public Slider healthBarSlider;
@@ -25,7 +27,6 @@ public class Monster : MonoBehaviour
 
     private void OnEnable()
     {
-        encount = false;
         isDead = false;
         anim.SetBool("Encount", false);
 
@@ -37,7 +38,7 @@ public class Monster : MonoBehaviour
                 Debug.LogWarning("HealthBarSlider not found in the scene.");
             }
         }
-        
+
         if (targetPosition == null)
         {
             targetPosition = FindObjectOfType<SpawnPoint>().transform;
@@ -66,6 +67,28 @@ public class Monster : MonoBehaviour
         if (spriteRenderer != null) spriteRenderer.color = Color.white;
     }
 
+    private void OnMouseDown()
+    {
+        if (FindObjectOfType<PopUp>() == null)
+        {
+            var canvas = FindObjectOfType<Canvas>();
+            popDown = Instantiate(popUp, canvas.transform);
+            PopUp.Instance.DataWrite(monsterName, speed, maxHealth);
+        }
+        else
+        {
+            popDown = FindObjectOfType<PopUp>().gameObject;
+            if (popDown.activeSelf)
+            {
+                Destroy(popDown);
+            }
+            else
+            {
+                popDown.SetActive(true);
+                PopUp.Instance.DataWrite(monsterName, speed, maxHealth);
+            }
+        }
+    }
     public void Initialize(MonsterData data)
     {
         monsterName = data.name;
@@ -73,7 +96,6 @@ public class Monster : MonoBehaviour
         speed = data.speed;
         maxHealth = data.maxHealth;
         currentHealth = maxHealth;
-        encount = false;
 
         if (healthBarSlider == null)
         {
@@ -104,12 +126,11 @@ public class Monster : MonoBehaviour
 
     void Update()
     {
-        Debug.Log(encount);
-        if (player != null && !encount && !isDead)
+        if (player != null && !isDead)
         {
-            transform.position = Vector3.MoveTowards(transform.position, player.position, speed * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position, GameManager.Instance.arrivePosition.position, speed * Time.deltaTime);
         }
-        if (encount)
+        if (transform.position == GameManager.Instance.arrivePosition.position)
         {
             anim.SetBool("Encount", true);
         }
@@ -139,7 +160,6 @@ public class Monster : MonoBehaviour
     {
         transform.position = targetPosition.position;
         isDead = true;
-        encount = false;
         anim.SetBool("Encount", false);
         spriteRenderer.color = Color.white;
         OnDeath?.Invoke(gameObject);
